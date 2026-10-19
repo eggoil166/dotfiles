@@ -1,0 +1,214 @@
+$base: #1e1e2e;
+$surface0: #313244;
+$surface1: #45475a;
+$text: #cdd6f4;
+$mauve: #cba6f7;
+$red: #f38ba8;
+$peach: #fab387;
+$yellow: #f9e2af;
+
+* { all: unset; font-family: "JetBrainsMono Nerd Font"; }
+
+.power-menu {
+  background-color: rgba(30, 30, 46, 0.85);
+  border: 2px solid $surface0;
+  border-radius: 14px;
+  padding: 10px;
+  margin: 4px;
+}
+
+.pw-btn {
+  font-size: 20px;
+  padding: 8px;
+  margin: 2px;
+  border-radius: 10px;
+  color: $text;
+  background-color: $surface0;
+  transition: all 0.2s ease;
+}
+.pw-btn:hover { background-color: $surface1 }
+.pw-lock:hover { color: $mauve; }
+.pw-logout:hover { color: $yellow; }
+.pw-reboot:hover { color: $peach; }
+.pw-shutdown:hover { color: $red; }
+
+.calendar-box {
+  background-color: rgba(30, 30, 46, 0.85);
+  border: 2px solid $surface0;
+  border-radius: 14px;
+  padding: 16px;
+  margin: 4px;
+}
+
+.cal-clock { margin-bottom: 8px; }
+.cal-time {
+  font-size: 32px;
+  font-weight: 700;
+  color: $mauve;
+}
+.cal-date {
+  font-size: 14px;
+  color: $text;
+}
+
+.cal-grid {
+  padding: 8px;
+  color: $text;
+}
+calendar.cal-grid:selected {
+  background-color: $mauve;
+  color: $base;
+  border-radius: 6px;
+}
+calendar.cal-grid:indeterminate {
+  color: $surface1;
+}
+.cal-grid:hover {
+  background-color: $surface0;
+}
+
+$subtext: #a6adc8;
+
+.sys-box {
+  background-color: rgba(30, 30, 46, 0.9);
+  border: 2px solid $surface0;
+  border-radius: 16px;
+  padding: 20px;
+  margin: 4px;
+}
+.ring { color: $surface0; }
+.ring-inner {
+  min-width: 80px;
+  min-height: 80px;
+}
+.ring-cpu { color: $peach;  }
+.ring-mem { color: $yellow; }
+.ring-text { font-size: 12px; font-weight: 700; color: $text; }
+.ring-label { font-size: 12px; color: $subtext; margin-top: 4px; }
+.cpu-graph {
+  color: $mauve; 
+  background-color: rgba(49, 50, 68, 0.4);
+  border-radius: 10px;
+}
+.info-row { padding: 2px 0; }
+.info-key { font-size: 13px; color: $subtext }
+.info-val { font-size: 13px; font-weight: 600; color: $text; }
+
+.graph-frame {
+  background-color: rgba(49, 50, 68, 0.4);
+  border-radius: 10px;
+  padding: 6px;
+}
+.graph-yaxis { min-width: 28px; }
+.axis-label { font-size: 9px; color: $subtext; }
+.cpu-graph {
+  color: $mauve;
+  border: 1px solid $surface0;
+  border-radius: 6px;
+}
+
+$teal: #94e2d5;
+$green: #a6e3a1;
+
+.ctrl-divider {
+  min-height: 2px;
+  background-color: $surface0;
+  margin: 8px 0;
+}
+.ctrl-row { padding: 2px 0; }
+.ctrl-icon { font-size: 20px; color: $mauve; min-width: 28px; }
+.ctrl-val { font-size: 13px; font-weight: 700; color: $text; min-width: 40px; }
+.ctrl-slider trough {
+  background-color: $surface0;
+  border-radius: 12px;
+  min-height: 8px;
+  margin: 0 4px;
+}
+.ctrl-slider trough highlight { border-radius: 12px; }
+.vol-slider trough highlight { background-color: $teal; }
+.bri-slider trough highlight { background-color: $yellow; }
+.mic-btn {
+  padding: 8px 12px; 
+  border-radius: 10px;
+  background-color: $surface0;
+  color: $text;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+.mic-active { color: $green; }
+.mic-muted { color: $red; background-color: rgba(243, 139, 168, 0.15); }
+.mic-btn:hover { background-color: $surface1; }
+
+$blue: #89b4fa;
+
+.wifi-box {
+  background-color: rgba(30, 30, 46, 0.9);
+  border: 2px solid $surface0;
+  border-radius: 16px;
+  padding: 16px;
+  margin: 4px;
+}
+.wifi-title { font-size: 15px; font-weight: 700; color: $text; }
+.wifi-rescan {
+  font-size: 14px; color: $mauve; padding: 4px 8px; border-radius: 8px; 
+}
+.wifi-rescan:hover { background-color: $surface0; }
+.wifi-row {
+  padding: 8px 10px;
+  border-radius: 10px;
+  color: $text;
+  transition: all 0.2s ease;
+}
+.wifi-row:hover { background-color: $surface0; }
+.wifi-connected { background-color: rgba(166, 227, 161, 0.5); color: $green; }
+.wifi-signal { font-size: 16px; color: $blue; min-width: 24px; }
+.wifi-ssid { font-size: 13px; }
+.wifi-lock { font-size: 11px; color: $subtext; }
+.wifi-check { font-size: 13px; color: $green; min-width: 20px; }
+.pw-bar {
+  background-color: rgba(49, 50, 68, 0.5);
+  border-radius: 10px;
+  padding: 10px;
+  margin-bottom: 4px;
+}
+.pw-prompt { font-size: 12px; color: $subtext; }
+.pw-input {
+  background-color: $base;
+  color: $text;
+  border: 1px solid $mauve;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+.pw-cancel {
+  color: $red;
+  font-size: 14px;
+  padding: 0 8px;
+  border-radius: 8px;
+}
+.pw-cancel:hover { background-color: $surface1; }
+
+// KEYBINDS
+.kb-box {
+  background-color: rgba(30, 30, 46, 0.7);
+  border: 2px solid rgba(49, 50, 68, 0.8);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin: 4px;
+}
+.kb-title {
+  color: $mauve;
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.kb-row { padding: 2px 0; }
+.kb-keys {
+  color: $mauve;
+  font-size: 13px;
+  font-weight: 600;
+}
+.kb-desc {
+  color: $text;
+  font-size: 13px;
+}

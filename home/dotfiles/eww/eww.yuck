@@ -1,0 +1,237 @@
+;; POWER MENU
+
+(defwidget power-menu []
+  (box :class "power-menu" :orientation "v" :space-evenly false :spacing 8
+    (button :class "pw-btn pw-lock" :onclick "eww close power && hyprlock" "")
+    (button :class "pw-btn pw-logout" :onclick "eww close power && hyprctl dispatch exit" "")
+    (button :class "pw-btn pw-reboot" :onclick "eww close power && systemctl reboot" "")
+    (button :class "pw-btn pw-shutdown" :onclick "eww close power && systemctl poweroff" "")
+  )
+)
+
+(defwindow power
+  :monitor 0
+  :geometry (geometry :x "6px" :y "6px" :width "90px" :height "220px" :anchor "top right")
+  :stacking "overlay"
+  :windowtype "dialog"
+  :wm-ignore true
+  (power-menu)
+)
+
+;; CALENDAR
+(defpoll cal-time :interval "10s" "date +'%H:%M'")
+(defpoll cal-date :interval "60s" "date +'%A, %B %d'")
+
+(defwidget calendar-widget []
+  (box :class "calendar-box" :orientation "v" :space-evenly false :spacing 10
+    (box :class "cal-clock" :orientation "v" :space-evenly false
+      (label :class "cal-time" :text cal-time)
+      (label :class "cal-date" :text cal-date)
+    )
+    (calendar :class "cal-grid")
+  )
+)
+
+(defwindow calendar
+  :monitor 0
+  :geometry (geometry :x "0px" :y "6px" :width "300px" :height "320px" :anchor "top center")
+  :stacking "overlay"
+  :windowtype "dialog"
+  :wm-ignore true
+  (calendar-widget)
+)
+
+;; SYSTEM
+(defpoll uptime :interval "60s" "awk '{d=int($1/86400);h=int(($1%86400)/3600);m=int(($1%3600)/60);printf \"%dd %dh %dm\", d, h, m}' /proc/uptime")
+(defpoll bat-rate :interval "10s"
+  "cat /sys/class/power_supply/BAT0/power_now 2>/dev/null | awk '{printf \"%.1f\", $1/1000000}'")
+
+(defpoll net-ssid :interval "60s"
+  "nmcli -t -f active,ssid dev wifi 2>/dev/null | awk -F: '/^yes/{print $2; exit}'")
+(defpoll net-signal :interval "5s"
+  "nmcli -t -f active,signal dev wifi 2>/dev/null | awk -F: '/^yes/{print $2; exit}'")
+(defpoll net-rate :interval "10s"
+  "nmcli -t -f active,rate dev wifi 2>/dev/null | awk -F: '/^yes/{print $2; exit}'")
+(defpoll net-ping :interval "10s"
+  "ping -c1 -W1 1.1.1.1 2>/dev/null | awk -F'time=' '/time=/{print int($2)\"ms\"; found=1} END{if(!found)print \"down\"}'")
+
+(defpoll volume :interval "1s"
+  "wpctl get-volume @DEFAULT_AUDIO_SINK@ | awk '{print int($2*100)}'")
+(defpoll mic-state :interval "1s"
+  "wpctl get-volume @DEFAULT_AUDIO_SOURCE@ | grep -q MUTED && echo muted || echo active")
+(defpoll brightness :interval "1s"
+  "brightnessctl -m | awk -F, '{print $4}' | tr -d '%'")
+
+(defwidget sysinfo []
+  (box :class "sys-box" :orientation "v" :space-evenly false :spacing 16
+    (box :class "sys-rings" :orientation "h" :space-evenly true
+      (box :orientation "v" :space-evenly false :spacing 4
+        (circular-progress :class "ring ring-cpu" :value {round(EWW_CPU.avg, 0)} :thickness 8 :clockwise true :start-at 75
+          (box :class "ring-inner"
+            (label :class "ring-text" :text "${round(EWW_CPU.avg, 0)}%")
+          )
+        )
+        (label :class "ring-label" :text "CPU")
+      )
+      (box :orientation "v" :space-evenly false :spacing 4
+        (circular-progress :class "ring ring-mem" :value {round(EWW_RAM.used_mem_perc, 0)} :thickness 8 :clockwise true :start-at 75
+          (box :class "ring-inner"
+            (label :class "ring-text" :text "${round(EWW_RAM.used_mem_perc, 0)}%")
+          )
+        )
+        (label :class "ring-label" :text "MEM")
+      )
+    )
+
+    (box :class "graph-frame" :orientation "h" :space-evenly false :spacing 4
+      (box :class "graph-yaxis" :orientation "v" :space-evenly true
+        (label :class "axis-label" :text "100")
+        (label :class "axis-label" :text "50")
+        (label :class "axis-label" :text "0")
+      )
+      (graph :class "cpu-graph" :value {EWW_CPU.avg} :time-range "60s" :min 0 :max 100 :thickness 3 :height 60 :hexpand true)
+    )
+
+    (box :orientation "v" :space-evenly false :spacing 6
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "CPU Temp" :hexpand true :halign "start")
+        (label :class "info-val" :text "${round(EWW_TEMPS.CORETEMP_PACKAGE_ID_0, 0)}°C")
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "RAM" :hexpand true :halign "start")
+        (label :class "info-val" :text "${round(EWW_RAM.used_mem / 1073741824, 1)} / ${round(EWW_RAM.total_mem / 1073741824, 0)} GB")
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Swap" :hexpand true :halign "start")
+        (label :class "info-val" :text "${round((EWW_RAM.total_swap - EWW_RAM.free_swap) / 1073741824, 1)} / ${round(EWW_RAM.total_swap / 1073741824, 0)} GB")
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Disk /" :hexpand true :halign "start")
+        (label :class "info-val" :text "${round(EWW_DISK['/'].used / 1073741824, 0)} / ${round(EWW_DISK['/'].total / 1073741824, 0)} GB (${round(EWW_DISK['/'].used_perc, 0)}%)")
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Network Status" :hexpand true :halign "start")
+        (label :class "info-val" :text {net-ssid != "" ? "Connected" : "Disconected"})
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Network" :hexpand true :halign "start")
+        (label :class "info-val" :text {net-ssid != "" ? net-ssid : "-"})
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Signal" :hexpand true :halign "start")
+        (label :class "info-val" :text {net-ssid != "" ? "${net-signal}%" : "-"})
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Link Rate" :hexpand true :halign "start")
+        (label :class "info-val" :text {net-ssid != "" ? net-rate : "-"})
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Ping" :hexpand true :halign "start")
+        (label :class "info-val" :style "color: ${net-ping == 'down' ? '#f38ba8' : '#a6e3a1'}" :text net-ping)
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Battery" :hexpand true :halign "start")
+        (label :class "info-val" :text "${EWW_BATTERY.BAT0.capacity}% ⋅ ${bat-rate}W")
+      )
+      (box :class "info-row" :orientation "h"
+        (label :class "info-key" :text "Uptime" :hexpand true :halign "start")
+        (label :class "info-val" :text uptime)
+      )
+    )
+    
+    (box :class "ctrl-divider")
+    (box :class "ctrl-row" :orientation "h" :space-evenly false :spacing 10
+      (label :class "ctrl-icon" :text "")
+      (scale :class "ctrl-slider vol-slider" :hexpand true :min 0 :max 101 :value volume :onchange "wpctl set-volume @DEFAULT_AUDIO_SINK@ {}%")
+      (label :class "ctrl-val" :text "${volume}%")
+    )
+    (box :class "ctrl-row" :orientation "h" :space-evenly false :spacing 10
+      (label :class "ctrl-icon" :text "󰃟")
+      (scale :class "ctrl-slider bri-slider" :hexpand true :min 1 :max 100 :value brightness :onchange "brightnessctl set {}%")
+      (label :class "ctrl-val" :text "${brightness}%")
+    )
+    (box :class "ctrl-row" :orientation "h" :space-evenly false :spacing 10
+      (button :class "mic-btn ${mic-state == 'muted' ? 'mic-muted': 'mic-active'}" :onclick "wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"
+        (box :orientation "h" :space-evenly false :spacing 8 :halign "start"
+          (label :text {mic-state == 'muted' ? "󰍭" : "󰍬"})
+          (label :text {mic-state == 'muted' ? "Mic muted" : "Mic active"})
+        )
+      )
+    )
+  )
+)
+
+(defwindow sysinfo
+  :monitor 0
+  :geometry (geometry :x "6px" :y "6px" :width "340px" :height "770px" :anchor "top right")
+  :stacking "overlay" :windowtype "dialog" :wm-ignore true
+  (sysinfo)
+)
+
+;; WIFI
+(defpoll wifi-list :interval "10s" "~/.config/eww/scripts/wifi-scan")
+(defvar wifi-scanning false)
+(defvar pw-target "")
+
+(defwidget wifi-picker []
+  (box :class "wifi-box" :orientation "v" :space-evenly false :spacing 8
+    (box :class "wifi-header" :orientation "h" :space-evenly false
+      (label :class "wifi-title" :text "Wi-Fi Networks" :hexpand true :halign "start")
+      (button :class "wifi-rescan" :onclick "nmcli device wifi rescan" "")
+    )
+    (revealer :reveal {pw-target != ""} :transition "slidedown" :duration "200ms"
+      (box :class "pw-bar" :orientation "v" :space-evenly false :spacing 6
+        (label :class "pw-prompt" :text "Password for ${pw-target}:" :halign "start")
+        (box :orientation "h" :space-evenly false :spacing 6
+          (input :class "pw-input" :hexpand true :password true :onaccept "nmcli device wifi connect '${pw-target}' password '{}' & eww update pw-target=''")
+          (button :class "pw-cancel" :onclick "eww update pw-target=''" "")
+        )
+      )
+    )
+    (scroll :vscroll true :height 280
+      (box :orientation "v" :space-evenly false :spacing 4
+        (for net in wifi-list
+          (button :class "wifi-row ${net.inuse ? 'wifi-connected' : ''}" :onclick {net.security != "open" ? "eww update pw-target='${net.ssid}'" : "nmcli device wifi connect '${net.ssid}' &"}
+            (box :orientation "h" :space-evenly false :spacing 10
+              (label :class "wifi-signal" :text {net.signal > 70 ? "󰤨" : net.signal > 40 ? "󰤥" : "󰤢"})
+              (label :class "wifi-ssid" :text {net.ssid} :hexpand true :halign "start")
+              (label :class "wifi-lock" :text {net.security != "open" ? "" : ""})
+              (label :class "wifi-check" :text {net.inuse ? "" : ""})
+            )
+          )
+        )
+      )
+    )
+  )
+)
+
+(defwindow wifi
+  :monitor 0
+  :geometry (geometry :x "6px" :y "6px" :width "400px" :height "400px" :anchor "top right")
+  :stacking "overlay" :windowtype "dialog" :wm-ignore true
+  :focusable "ondemand"
+  (wifi-picker)
+)
+
+;; KEYBINDS (SUPER + /) — rows come from scripts/keybinds via `eww update`
+(defvar keybinds "[]")
+
+(defwidget keybinds-sheet []
+  (box :class "kb-box" :orientation "v" :space-evenly false :spacing 4
+    (label :class "kb-title" :halign "start" :text "keybinds")
+    (for row in keybinds
+      (box :class "kb-row" :orientation "h" :space-evenly false :spacing 12
+        (label :class "kb-keys" :halign "start" :width 170 :xalign 0 :text {row.keys})
+        (label :class "kb-desc" :halign "start" :xalign 0 :text {row.desc})
+      )
+    )
+  )
+)
+
+(defwindow keybinds
+  :monitor 0
+  :geometry (geometry :x "20px" :y "0px" :anchor "center right")
+  :stacking "overlay" :windowtype "dialog" :wm-ignore true
+  :namespace "eww-keybinds"
+  (keybinds-sheet)
+)

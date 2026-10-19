@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+nmcli -t -f IN-USE,SSID,SIGNAL,SECURITY device wifi list 2>/dev/null \
+  | awk -F: '
+    BEGIN { print "["; first=1 }
+    {
+        inuse = ($1 == "*") ? "true" : "false"
+        ssid = $2
+        signal = $3
+        security = ($4 == "") ? "open" : $4
+        if (ssid == "") next
+        gsub(/"/, "\\\"", ssid)
+        if (!first) print ","
+        first=0
+        printf "{\"ssid\":\"%s\",\"signal\":%s,\"security\":\"%s\",\"inuse\":%s}", ssid, signal, security, inuse
+    }
+    END { print "]" }'
